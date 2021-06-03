@@ -145,14 +145,20 @@ void PandaRobotHWSim::readSim(ros::Time time, ros::Duration period)
 
     updateRobotStateJoints(jnt_pos, jnt_vel, jnt_eff);
 
-    std::vector<std::thread> threads;
-    if (robot_state_needed) threads.push_back(std::thread(&PandaRobotHWSim::updateJacobian,this,jnt_pos, jnt_vel));
-    if (coriolis_calculation_needed) threads.push_back(std::thread(&PandaRobotHWSim::updateCoriolisVec,this,jnt_pos, jnt_vel));
-    if (gravity_calculation_needed) threads.push_back(std::thread(&PandaRobotHWSim::updateGravityVec,this,jnt_pos));
-    if (mass_calculation_needed) threads.push_back(std::thread(&PandaRobotHWSim::updateMassMatrixKDL,this,jnt_pos));
-    if (robot_state_needed) threads.push_back(std::thread(&PandaRobotHWSim::publishRobotStateMsg,this)); 
-    for (auto &th : threads) th.join();
-  
+    // Multi-Threading leads to problems when reading out at same time. 
+    // std::vector<std::thread> threads;
+    // if (robot_state_needed) threads.push_back(std::thread(&PandaRobotHWSim::updateJacobian,this,jnt_pos, jnt_vel));
+    // if (coriolis_calculation_needed) threads.push_back(std::thread(&PandaRobotHWSim::updateCoriolisVec,this,jnt_pos, jnt_vel));
+    // if (gravity_calculation_needed) threads.push_back(std::thread(&PandaRobotHWSim::updateGravityVec,this,jnt_pos));
+    // if (mass_calculation_needed) threads.push_back(std::thread(&PandaRobotHWSim::updateMassMatrixKDL,this,jnt_pos));
+    // if (robot_state_needed) threads.push_back(std::thread(&PandaRobotHWSim::publishRobotStateMsg,this)); 
+    // for (auto &th : threads) th.join();
+    
+  if (robot_state_needed) updateJacobian(jnt_pos,jnt_vel);
+  if (coriolis_calculation_needed) updateCoriolisVec(jnt_pos,jnt_vel);
+  if (gravity_calculation_needed) updateGravityVec(jnt_pos);
+  if (mass_calculation_needed) updateMassMatrixKDL(jnt_pos);
+  if (robot_state_needed) publishRobotStateMsg();
 }
 
 
